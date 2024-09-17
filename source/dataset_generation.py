@@ -258,11 +258,11 @@ def generate_noisy_dataset(
 clean_dataset_dir = "/home/GongpingHuang/zyk/datasets/DEMAND_16KHz/test/clean/"
 noise_dataset_dir = "/home/GongpingHuang/zyk/datasets/demand_noise_16k/"
 output_dir = "/home/GongpingHuang/zyk/datasets/DEMAND_16KHz/test/noisy_new_test/"
-snr_range = (0, 12)
+snr_range = (-3, 10)
 rir_folder = "/home/GongpingHuang/zyk/McNet-main/rirs/"  # Set to your RIR folder
 target_dB_FS = -25
 target_dB_FS_floating_value = 10
-sub_sample_length = 3.072
+sub_sample_length = 3
 sr = 16000
 nchannels = 6
 ref_channel = 4
