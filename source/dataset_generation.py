@@ -255,11 +255,11 @@ def generate_noisy_dataset(
         sf.write(os.path.join(output_dir, f"{file_name}.wav"), noisy_y_selected.T, sr)
 
 # Parameters (adjust these as needed)
-clean_dataset_dir = "/home/GongpingHuang/zyk/datasets/DEMAND_16KHz/test/clean/"
-noise_dataset_dir = "/home/GongpingHuang/zyk/datasets/demand_noise_16k/"
-output_dir = "/home/GongpingHuang/zyk/datasets/DEMAND_16KHz/test/noisy_new_test/"
+clean_dataset_dir = ""
+noise_dataset_dir = ""
+output_dir = ""
 snr_range = (-3, 10)
-rir_folder = "/home/GongpingHuang/zyk/McNet-main/rirs/"  # Set to your RIR folder
+rir_folder = ""  # Set to your RIR folder
 target_dB_FS = -25
 target_dB_FS_floating_value = 10
 sub_sample_length = 3
