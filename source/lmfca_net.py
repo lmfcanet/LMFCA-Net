@@ -198,9 +198,9 @@ class lmfcaNet(nn.Module):
         e4 = self.maxpools[3](e3)
 
         # Decoder
-        d4 = self.up_blocks[0](e4) + e3
+        d4 = self.up_blocks[0](e4)
 
-        d3_input = d4
+        d3_input = d4 + e3
         d3 = self.up_blocks[1](d3_input)
 
         d2_input = d3 + e2
