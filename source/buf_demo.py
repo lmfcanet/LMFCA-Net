@@ -11,7 +11,7 @@ import sounddevice as sd
 from collections import deque
 from threading import Thread
 import queue
-from lmfcaNet import lmfcaNet
+from lmfca_net import lmfcaNet
 
 class RealTimeProcessor:
     def __init__(self, model, n_fft, hop_length, win_length, samplerate=16000, device='cpu', channels=6):
