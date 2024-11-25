@@ -58,8 +58,6 @@ class RealTimeProcessor:
                 stft = stft.view(1, self.channels*2, 128, 4).to(self.device)
                 
                 if len(stft) == 4:
-                    # Update the model buffers by removing the oldest four time steps
-                    # and appending the new four
                     self.model_buffer = torch.cat((self.model_buffer[:, :, :, 4:], stft), dim=-1)
                     # Feed the updated buffers into the model
                     with torch.no_grad():
@@ -69,13 +67,13 @@ class RealTimeProcessor:
                         ori_stft = torch.view_as_complex(self.model_buffer.permute(0, 2, 3, 1).contiguous()[:, :, :, 8:10]) #(1, 128, model.buffer)
                         #print(stft.shape)
                         enhanced_stft = ori_stft * mask   #(1, 128, model.buffer)
-                        #take the most recent four frames of enhanced_stft
-                        enhanced_stft = enhanced_stft[:, :, -4:]
                         
                         # Reconstruct time-domain signal via ISTFT
                         enhanced_signal = torch.istft(enhanced_stft, n_fft=self.n_fft, hop_length=self.hop_length,
                                                      win_length=self.win_length, window=self.window).cpu().numpy()
-                        print(enhanced_signal.shape)
+
+                        # Take the last self.buffer_size - self.hop_length samples
+                        enhanced_signal = enhanced_signal[-(self.buffer_size - self.hop_length):]
                 
                         # Normalize to prevent clipping
                         enhanced_signal = enhanced_signal / np.max(np.abs(enhanced_signal) + 1e-8)
