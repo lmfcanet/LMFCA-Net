@@ -26,10 +26,10 @@ class RealTimeProcessor:
         self.channels = channels
         self.buffer_size = hop_length * (4 - 1) + win_length
         self.output_buffer = deque()  # Buffer to store enhanced audio
-        self.buffer = deque(maxlen=hop_length * (4 - 1) + win_length)  # 4 frames with 50% overlap
+        self.buffer = deque()  # Buffer to store input audio
         self.output_q = queue.Queue()
         self.new_stfts = deque(maxlen=4)
-        self.model_buffer = torch.zeros((1, 12, 128, 32)).to(device)
+        self.model_buffer = torch.zeros((1, 12, 128, 12)).to(device)
         
     def audio_callback(self, indata, frames, time, status):
         if status:
@@ -43,7 +43,10 @@ class RealTimeProcessor:
                 break
             self.buffer.extend(indata)
             if len(self.buffer) >= self.buffer_size:
-                frame = np.array(self.buffer)
+                frame = np.array(list(self.buffer)[:self.buffer_size])
+                remove_length = self.buffer_size - self.hop_length
+                for _ in range(remove_length):
+                    self.buffer.popleft()
                 frame_tensor = torch.from_numpy(frame).T.float().to(self.device)
                 # Compute STFT
                 stft = torch.stft(frame_tensor, n_fft=self.n_fft, hop_length=self.hop_length,
@@ -63,9 +66,9 @@ class RealTimeProcessor:
                         mask = self.model(self.model_buffer).permute(0, 2, 3, 1).contiguous()
                         mask = torch.view_as_complex(mask)
                         #print(stft.permute(0, 2, 3, 1).contiguous()[:, :, :, 8:10].shape)
-                        ori_stft = torch.view_as_complex(self.model_buffer.permute(0, 2, 3, 1).contiguous()[:, :, :, 8:10]) #(1, 128, 32)
+                        ori_stft = torch.view_as_complex(self.model_buffer.permute(0, 2, 3, 1).contiguous()[:, :, :, 8:10]) #(1, 128, model.buffer)
                         #print(stft.shape)
-                        enhanced_stft = ori_stft * mask   #(1, 128, 32)
+                        enhanced_stft = ori_stft * mask   #(1, 128, model.buffer)
                         #take the most recent four frames of enhanced_stft
                         enhanced_stft = enhanced_stft[:, :, -4:]
                         
