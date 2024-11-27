@@ -162,7 +162,6 @@ class lmfcaNet(nn.Module):
         self.up_blocks.append(nn.Sequential(
             Sandglass(channels[3], channels[3], channels[2], ksize=3, stride=1),
             Sandglass(channels[3], channels[3], channels[2], ksize=3, stride=1),
-            nn.ConvTranspose2d(channels[3], channels[3], kernel_size=2, stride=2, padding=0),
         ))
         # Up3 to Up1
         for idx in range(2, -1, -1):
@@ -200,7 +199,7 @@ class lmfcaNet(nn.Module):
         # Decoder
         d4 = self.up_blocks[0](e4)
 
-        d3_input = d4 + e3
+        d3_input = d4 + e4
         d3 = self.up_blocks[1](d3_input)
 
         d2_input = d3 + e2
