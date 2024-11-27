@@ -146,13 +146,13 @@ class lmfcaNet(nn.Module):
         )
 
         # Encoder (Downsampling) Layers
-        self.maxpools = nn.ModuleList([nn.MaxPool2d(2, 2) for _ in range(3)])
         at_modes = ["freq", "temp", "freq"]
         self.down_blocks = nn.ModuleList()
         for idx in range(3):
             self.down_blocks.append(nn.Sequential(
                 FCABlock(channels[idx], channels[idx + 1], ksize=3, stride=1, at_mode=at_modes[idx]),
                 Sandglass(channels[idx + 1], channels[idx + 1], channels[idx], ksize=3, stride=1),
+                nn.MaxPool2d(2, 2),
             ))
 
         # Decoder (Upsampling) Layers
@@ -192,14 +192,13 @@ class lmfcaNet(nn.Module):
         # Encoder
         e0 = self.firstblock(x)
         e1 = self.down_blocks[0](e0)
-        e2 = self.down_blocks[1](self.maxpools[0](e1))
-        e3 = self.down_blocks[2](self.maxpools[1](e2))
-        e4 = self.maxpools[2](e3)
+        e2 = self.down_blocks[1](e1)
+        e3 = self.down_blocks[2](e2)
 
         # Decoder
-        d4 = self.up_blocks[0](e4)
+        d4 = self.up_blocks[0](e3)
 
-        d3_input = d4 + e4
+        d3_input = d4 + e3
         d3 = self.up_blocks[1](d3_input)
 
         d2_input = d3 + e2
