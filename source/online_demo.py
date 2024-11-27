@@ -29,7 +29,7 @@ class RealTimeProcessor:
         self.buffer = deque()  # Buffer to store input audio
         self.output_q = queue.Queue()
         self.new_stfts = deque(maxlen=4)
-        self.model_buffer = torch.zeros((1, 12, 128, 12)).to(device)
+        self.model_buffer = torch.zeros((1, 12, 128, 16)).to(device)
         
     def audio_callback(self, indata, frames, time, status):
         if status:
@@ -57,7 +57,7 @@ class RealTimeProcessor:
                 
                 stft = stft.view(1, self.channels*2, 128, 4).to(self.device)
                 
-                if len(stft) == 4:
+                if stft.shape[-1] == 4:
                     self.model_buffer = torch.cat((self.model_buffer[:, :, :, 4:], stft), dim=-1)
                     # Feed the updated buffers into the model
                     with torch.no_grad():
@@ -73,7 +73,7 @@ class RealTimeProcessor:
                                                      win_length=self.win_length, window=self.window).cpu().numpy()
 
                         # Take the last self.buffer_size - self.hop_length samples
-                        enhanced_signal = enhanced_signal[-(self.buffer_size - self.hop_length):]
+                        enhanced_signal = enhanced_signal[:, -(self.buffer_size - self.hop_length):]
                 
                         # Normalize to prevent clipping
                         enhanced_signal = enhanced_signal / np.max(np.abs(enhanced_signal) + 1e-8)
@@ -101,8 +101,8 @@ class RealTimeProcessor:
             try:
                 # Attempt to retrieve a block from the output queue
                 data = self.output_q.get_nowait()
-                if data.shape != (self.buffer_size, self.channels):
-                    print(f"Unexpected data shape: {data.shape} vs expected {(self.buffer_size, self.channels)}")
+                if data.shape != (1, self.buffer_size - self.hop_length):
+                    print(f"Unexpected data shape: {data.shape} vs expected {(1, self.buffer_size - self.hop_length)}")
                     data = np.zeros((self.buffer_size, self.channels), dtype=np.float32)
             except queue.Empty:
                 # If no data is available, output silence
